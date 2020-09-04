@@ -17,7 +17,7 @@ const server = http.createServer((req, res) => { // req is request from client-s
         if (req.url == '/') fileUrl = '/index.html';
         else fileUrl = req.url;
 
-        var filePath = path.resolve('./public' + fileUrl);
+        var filePath = path.resolve('./public' + fileUrl); // fileUrl starts with '/' automatically
 
         const fileExt = path.extname(filePath);
 
