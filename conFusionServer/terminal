@@ -1,0 +1,63 @@
+{
+    "label": "Hot",
+    "feature": false,
+    "_id": "5f58eca38bd9dc13dce01871",
+    "name": "Uthappizza",
+    "image": "images/uthappizza.png",
+    "category": "mains",
+    "price": 499,
+    "description": "A unique combination of Indian Uthappam (pancake) and Italian pizza, topped with Cerignola olives, ripe vine cherry tomatoes, Vidalia onion, Guntur chillies and Buffalo Paneer.",
+    "comments": [
+        {
+            "_id": "5f58eca38bd9dc13dce01872",
+            "rating": 5,
+            "comment": "Imagine all the eatables, living in conFusion!",
+            "author": "John Lemon",
+            "createdAt": "2020-09-09T14:54:27.726Z",
+            "updatedAt": "2020-09-09T14:54:27.726Z"
+        },
+        {
+            "_id": "5f58eca38bd9dc13dce01873",
+            "rating": 4,
+            "comment": "Sends anyone to heaven, I wish I could get my mother-in-law to eat it!",
+            "author": "Paul McVites",
+            "createdAt": "2020-09-09T14:54:27.728Z",
+            "updatedAt": "2020-09-09T14:54:27.728Z"
+        },
+        {
+            "_id": "5f58eca38bd9dc13dce01874",
+            "rating": 3,
+            "comment": "Eat it, just eat it!",
+            "author": "Michael Jaikishan",
+            "createdAt": "2020-09-09T14:54:27.728Z",
+            "updatedAt": "2020-09-09T14:54:27.728Z"
+        },
+        {
+            "_id": "5f58eca38bd9dc13dce01875",
+            "rating": 4,
+            "comment": "Ultimate, Reaching for the stars!",
+            "author": "Ringo Starry",
+            "createdAt": "2020-09-09T14:54:27.729Z",
+            "updatedAt": "2020-09-09T14:54:27.729Z"
+        },
+        {
+            "_id": "5f58eca38bd9dc13dce01876",
+            "rating": 2,
+            "comment": "It's your birthday, we're gonna party!",
+            "author": "25 Cent",
+            "createdAt": "2020-09-09T14:54:27.729Z",
+            "updatedAt": "2020-09-09T14:54:27.729Z"
+        },
+        {
+            "_id": "5f58ed228bd9dc13dce01877",
+            "rating": 3,
+            "comment": "Testing my first comment",
+            "author": "Test User My man",
+            "createdAt": "2020-09-09T14:56:34.909Z",
+            "updatedAt": "2020-09-09T14:56:34.909Z"
+        }
+    ],
+    "createdAt": "2020-09-09T14:54:27.730Z",
+    "updatedAt": "2020-09-09T14:56:34.910Z",
+    "__v": 1
+}
