@@ -45,6 +45,9 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
 // Authentication
 function auth(req, res, next) {
   // console.log(req.headers);
@@ -135,36 +138,35 @@ function auth(req, res, next) {
     if (!authHeader) {
       var err = new Error('You are not authenicated!');
 
-      res.setHeader('WWW-Authenticate', 'Basic');
-      err.status = 401;
+      // res.setHeader('WWW-Authenticate', 'Basic');
+      err.status = 403;
       next(err);
       return;
     }
+    // not allowed here without authenication
 
-    var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString()
-      .split(':'); // splits into an array of 2 items
+    // var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString()
+    //   .split(':'); // splits into an array of 2 items
 
-    var username = auth[0];
-    var password = auth[1];
+    // var username = auth[0];
+    // var password = auth[1];
 
-    if (username === 'admin' && password === 'password') {
-      req.session.user = 'admin';
-      next();
-    } else {
-      var err = new Error('Wrong credentials!');
+    // if (username === 'admin' && password === 'password') {
+    //   req.session.user = 'admin';
+    //   next();
+    // } else {
+    //   var err = new Error('Wrong credentials!');
 
-      res.setHeader('WWW-Authenicate', 'Basic');
-      err.status = 401;
-      next(err);
-    }
+    //   res.setHeader('WWW-Authenicate', 'Basic');
+    //   err.status = 401;
+    //   next(err);
+    // }
   } else { // cookie is present
-    if (req.session.user === 'admin') {
+    if (req.session.user === 'authenticated') {
       next();
     } else {
-      var err = new Error('Wrong credentials!');
-
-      res.setHeader('WWW-Authenicate', 'Basic');
-      err.status = 401;
+      var err = new Error('You are not authenticated!');
+      err.status = 403;
       next(err);
     }
   }
@@ -173,9 +175,6 @@ function auth(req, res, next) {
 app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 
 // our routes
 app.use('/dishes', dishRouter);
