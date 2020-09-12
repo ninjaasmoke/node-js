@@ -3,8 +3,12 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var bodyParser = require('body-parser');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
+var passport = require('passport');
+var authenticate = require('./authenticate');
+
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -17,7 +21,9 @@ var leaderRouter = require('./routes/leaderRouter');
 const mongoose = require('mongoose');
 
 const url = 'mongodb://localhost:27017/conFusion';
-const connect = mongoose.connect(url);
+const connect = mongoose.connect(url,
+  { useNewParser: true, useUnifiedTopology: true, useFindAndModify: false }
+);
 
 connect.then((db) => {
   console.log('Connected correctly to server');
@@ -33,6 +39,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 app.use(logger('dev'));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 // app.use(cookieParser('12345-67890-09876-54321'));
@@ -44,6 +51,10 @@ app.use(session({
   resave: false,
   store: new FileStore()
 }));
+
+// for passport auth local
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -130,45 +141,37 @@ function auth(req, res, next) {
 
 
   // with session
-  console.log(req.session);
+  // console.log(req.session);
 
-  if (!req.session.user) { // session.user doesnt exist
-    var authHeader = req.headers.authorization;
+  // if (!req.session.user) { // session.user doesnt exist
+  //   var authHeader = req.headers.authorization;
 
-    if (!authHeader) {
-      var err = new Error('You are not authenicated!');
+  //   if (!authHeader) {
+  //     var err = new Error('You are not authenicated!');
 
-      // res.setHeader('WWW-Authenticate', 'Basic');
-      err.status = 403;
-      next(err);
-      return;
-    }
-    // not allowed here without authenication
+  //     // res.setHeader('WWW-Authenticate', 'Basic');
+  //     err.status = 403;
+  //     next(err);
+  //     return;
+  //   }
+  // } else { // cookie is present
+  //   if (req.session.user === 'authenticated') {
+  //     next();
+  //   } else {
+  //     var err = new Error('You are not authenticated!');
+  //     err.status = 403;
+  //     next(err);
+  //   }
+  // }
 
-    // var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString()
-    //   .split(':'); // splits into an array of 2 items
+  // with passport
 
-    // var username = auth[0];
-    // var password = auth[1];
-
-    // if (username === 'admin' && password === 'password') {
-    //   req.session.user = 'admin';
-    //   next();
-    // } else {
-    //   var err = new Error('Wrong credentials!');
-
-    //   res.setHeader('WWW-Authenicate', 'Basic');
-    //   err.status = 401;
-    //   next(err);
-    // }
-  } else { // cookie is present
-    if (req.session.user === 'authenticated') {
-      next();
-    } else {
-      var err = new Error('You are not authenticated!');
-      err.status = 403;
-      next(err);
-    }
+  if (!req.user) { // auto loaded by passport
+    var err = new Error('You are not authenticated!!!');
+    err.status = 401;
+    return next(err);
+  } else {
+    next();
   }
 }
 
