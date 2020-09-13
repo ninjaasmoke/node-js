@@ -12,6 +12,15 @@ var User = new Schema({
     //     type: String,
     //     required: true,
     // },
+    // for mongoose population in dishes for comments
+    firstname: {
+        type: String,
+        default: ''
+    },
+    lastname: {
+        type: String,
+        default: ''
+    },
     admin: {
         type: Boolean,
         default: false,

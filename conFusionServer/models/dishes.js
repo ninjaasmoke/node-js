@@ -16,8 +16,11 @@ const commentSchema = new Schema({
         required: true,
     },
     author: {
-        type: String,
-        require: true
+        // type: String,
+        // require: true
+        // for mongoose population
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     }
 },
     {
