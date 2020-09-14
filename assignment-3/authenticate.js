@@ -37,6 +37,13 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts, (jwt_paylod, done) => {
 
 exports.verifyUser = passport.authenticate('jwt', { session: false });  // can be used anywhere to check authenticity
 
-exports.verifyAdmin = function (user) {
-    return user.admin; // returns the boolean to verify admin
+exports.verifyAdmin = (req, res, next) => {
+    if (req.user.admin) {
+        return next()
+    }
+    else {
+        err = new Error("You are not authorized to perform this operation!")
+        err.status = 403
+        return next(err)
+    }
 }

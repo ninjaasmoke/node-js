@@ -8,21 +8,14 @@ var router = express.Router();
 router.use(bodyParser.json());
 
 /* GET users listing. */
-router.get('/', authenticate.verifyUser, function (req, res, next) {
-  if (!authenticate.verifyAdmin(req.user)) {
-    var err = new Error('You are not authorized to do this!!!');
-    console.log('Not admin');
-    err.status = 403;
-    return next(err);
-  } else {
-    User.find({})
-      .then((users) => {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.json(users);
-      })
-      .catch();
-  }
+router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function (req, res, next) {
+  User.find({})
+    .then((users) => {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.json(users);
+    })
+    .catch();
 });
 
 router.post('/signup', (req, res, next) => {

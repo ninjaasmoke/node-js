@@ -18,48 +18,27 @@ promoRouter.route('/')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(authenticate.verifyUser, (req, res, next) => {
-        if (!authenticate.verifyAdmin(req.user)) {
-            var err = new Error('You are not authorized to do this!!!');
-            console.log('Not admin');
-            err.status = 403;
-            return next(err);
-        } else {
-            Promotions.create(req.body)
-                .then((promotion) => {
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json(promotion);
-                }, (err) => next(err))
-                .catch((err) => next(err));
-        }
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        Promotions.create(req.body)
+            .then((promotion) => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(promotion);
+            }, (err) => next(err))
+            .catch((err) => next(err));
     })
-    .put(authenticate.verifyUser, (req, res, next) => {
-        if (!authenticate.verifyAdmin(req.user)) {
-            var err = new Error('You are not authorized to do this!!!');
-            console.log('Not admin');
-            err.status = 403;
-            return next(err);
-        } else {
-            res.statusCode = 403;
-            res.end('PUT operation not supported on promotions!!!');
-        }
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        res.statusCode = 403;
+        res.end('PUT operation not supported on promotions!!!');
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
-        if (!authenticate.verifyAdmin(req.user)) {
-            var err = new Error('You are not authorized to do this!!!');
-            console.log('Not admin');
-            err.status = 403;
-            return next(err);
-        } else {
-            Promotions.remove({})
-                .then((response) => {
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json(response);
-                }, (err) => next(err))
-                .catch((err) => next(err));
-        }
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        Promotions.remove({})
+            .then((response) => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(response);
+            }, (err) => next(err))
+            .catch((err) => next(err));
     });
 
 // // With params
@@ -76,50 +55,29 @@ promoRouter.route('/:promoID')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(authenticate.verifyUser, (req, res, next) => {
-        if (!authenticate.verifyAdmin(req.user)) {
-            var err = new Error('You are not authorized to do this!!!');
-            console.log('Not admin');
-            err.status = 403;
-            return next(err);
-        } else {
-            res.statusCode = 403;
-            res.end('POST operation not supported on promotion with ID!!!');
-        }
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        res.statusCode = 403;
+        res.end('POST operation not supported on promotion with ID!!!');
     })
-    .put(authenticate.verifyUser, (req, res, next) => {
-        if (!authenticate.verifyAdmin(req.user)) {
-            var err = new Error('You are not authorized to do this!!!');
-            console.log('Not admin');
-            err.status = 403;
-            return next(err);
-        } else {
-            Promotions.findByIdAndUpdate(req.params.promoID, {
-                $set: req.body
-            }, { new: true })
-                .then((promotion) => {
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json(promotion);
-                }, (err) => next(err))
-                .catch((err) => next(err));
-        }
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        Promotions.findByIdAndUpdate(req.params.promoID, {
+            $set: req.body
+        }, { new: true })
+            .then((promotion) => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(promotion);
+            }, (err) => next(err))
+            .catch((err) => next(err));
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
-        if (!authenticate.verifyAdmin(req.user)) {
-            var err = new Error('You are not authorized to do this!!!');
-            console.log('Not admin');
-            err.status = 403;
-            return next(err);
-        } else {
-            Promotions.findByIdAndRemove(req.params.promoID)
-                .then((resp) => {
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json(resp);
-                }, (err) => next(err))
-                .catch((err) => next(err));
-        }
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+        Promotions.findByIdAndRemove(req.params.promoID)
+            .then((resp) => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(resp);
+            }, (err) => next(err))
+            .catch((err) => next(err));
     });
 
 
