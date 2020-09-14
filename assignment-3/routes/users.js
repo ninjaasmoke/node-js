@@ -15,7 +15,11 @@ router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function (req
       res.setHeader('Content-Type', 'application/json');
       res.json(users);
     })
-    .catch();
+    .catch((err) => {
+      var err = new Error(err);
+      err.status = 500;
+      return next(err);
+    });
 });
 
 router.post('/signup', (req, res, next) => {
