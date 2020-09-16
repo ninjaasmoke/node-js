@@ -22,7 +22,8 @@ dishRouter.route('/')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(authenticate.verifyUser, (req, res, next) => { // adding verification using token
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => { // adding verification using token
+        console.log(req.user);
         Dishes.create(req.body)
             .then((dish) => {
                 console.log('Dish created: ', dish);
@@ -31,12 +32,14 @@ dishRouter.route('/')
                 res.json(dish);
             }, (err) => next(err))
             .catch((err) => next(err));
+
     })
-    .put(authenticate.verifyUser, (req, res, next) => {
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         res.statusCode = 403;
         res.end('PUT operation not supported on dishes!!!');
+
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dishes.remove({})
             .then((resp) => {
                 res.statusCode = 200;
@@ -60,11 +63,12 @@ dishRouter.route('/:dishId')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(authenticate.verifyUser, (req, res, next) => {
+    .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         res.statusCode = 403;
         res.end('POST operation not supported on dish with ID!!!');
+
     })
-    .put(authenticate.verifyUser, (req, res, next) => {
+    .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dishes.findByIdAndUpdate(req.params.dishId, {
             $set: req.body
         }, { new: true })
@@ -75,7 +79,7 @@ dishRouter.route('/:dishId')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dishes.findByIdAndRemove(req.params.dishId)
             .then((resp) => {
                 res.statusCode = 200;
@@ -138,7 +142,7 @@ dishRouter.route('/:dishId/comments')
         res.statusCode = 403;
         res.end('PUT operation not supported on dishes/' + req.params.dishId + '/comments');
     })
-    .delete(authenticate.verifyUser, (req, res, next) => {
+    .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
         Dishes.findById(req.params.dishId)
             .then((dish) => {
                 if (dish != null) {
@@ -167,7 +171,8 @@ dishRouter.route('/:dishId/comments/:commentID')
         // modification of res is carried from app.all
         Dishes.findById(req.params.dishId)
             .populate('comments.author')
-            .then((dish) => { // 3 possibilities
+            .then((dish) => {
+
                 if (dish != null && dish.comments.id(req.params.commentID) != null) {
                     res.statusCode = 200;
                     res.setHeader('Content-Type', 'application/json');
@@ -181,6 +186,7 @@ dishRouter.route('/:dishId/comments/:commentID')
                     err.statusCode = 404;
                     return next(err);
                 }
+
             }, (err) => next(err))
             .catch((err) => next(err));
     })
@@ -190,63 +196,81 @@ dishRouter.route('/:dishId/comments/:commentID')
     })
     .put(authenticate.verifyUser, (req, res, next) => {
         Dishes.findById(req.params.dishId)
-            .then((dish) => { // 3 possibilities
-                if (dish != null && dish.comments.id(req.params.commentID) != null) {
-                    if (req.body.rating) {
-                        dish.comments.id(req.params.commentID).rating = req.body.rating;
-                    }
-                    if (req.body.comment) {
-                        dish.comments.id(req.params.commentID).comment = req.body.comment;
-                    }
-                    dish.save()
-                        .then((dish) => {
-                            // res.statusCode = 200;
-                            // res.setHeader('Content-Type', 'application/json');
-                            // res.json(dish);
-                            // to populate user as author
-                            Dishes.findById(dish._id)
-                                .populate('commnets.author')
-                                .then((dish) => {
-                                    res.statusCode = 200;
-                                    res.setHeader('Content-Type', 'application/json');
-                                    res.json(dish);
-                                });
-                        }, (err) => next(err));
-                } else if (dish == null) {
-                    err = new Error('Dish ' + req.params.dishId + ' not found');
-                    err.statusCode = 404;
-                    return next(err); // see in app.js error handling function which handles this return
-                } else {
-                    err = new Error('Comment ' + req.params.commentID + ' not found');
-                    err.statusCode = 404;
+            .populate('comments.author')
+            .then((dish) => {
+                if (!req.user._id.equals(dish.comments.id(req.params.commentID).author._id)) { // when author and user are not same
+                    // also can use dish.comments.is(req.params.commentID).author without populating the comments
+                    console.log('Not same author');
+                    var err = new Error('You are not the author!!! Only authors can edit their comments');
+                    err.status = 403;
                     return next(err);
+                } else { // when author and user are same
+                    console.log('Same author');
+                    if (dish != null && dish.comments.id(req.params.commentID) != null) {
+                        if (req.body.rating) {
+                            dish.comments.id(req.params.commentID).rating = req.body.rating;
+                        }
+                        if (req.body.comment) {
+                            dish.comments.id(req.params.commentID).comment = req.body.comment;
+                        }
+                        dish.save()
+                            .then((dish) => {
+                                // res.statusCode = 200;
+                                // res.setHeader('Content-Type', 'application/json');
+                                // res.json(dish);
+                                // to populate user as author
+                                Dishes.findById(dish._id)
+                                    .populate('comments.author')
+                                    .then((dish) => {
+                                        res.statusCode = 200;
+                                        res.setHeader('Content-Type', 'application/json');
+                                        res.json(dish);
+                                    });
+                            }, (err) => next(err));
+                    } else if (dish == null) {
+                        err = new Error('Dish ' + req.params.dishId + ' not found');
+                        err.statusCode = 404;
+                        return next(err); // see in app.js error handling function which handles this return
+                    } else {
+                        err = new Error('Comment ' + req.params.commentID + ' not found');
+                        err.statusCode = 404;
+                        return next(err);
+                    }
                 }
             }, (err) => next(err))
             .catch((err) => next(err));
     })
     .delete(authenticate.verifyUser, (req, res, next) => {
         Dishes.findById(req.params.dishId)
+            .populate('comments.author')
             .then((dish) => {
-                if (dish != null && dish.comments.id(req.params.commentID) != null) {
-                    dish.comments.id(dish.comments.id(req.params.commentID)._id).remove(); // accessing the subdocument
-                    dish.save()
-                        .then((dish) => {
-                            Dishes.findById(dish._id)
-                                .populate('commnets.author')
-                                .then((dish) => {
-                                    res.statusCode = 200;
-                                    res.setHeader('Content-Type', 'application/json');
-                                    res.json(dish);
-                                });
-                        }, (err) => next(err));
-                } else if (dish == null) {
-                    err = new Error('Dish ' + req.params.dishId + ' not found');
-                    err.statusCode = 404;
-                    return next(err); // see in app.js error handling function which handles this return
-                } else {
-                    err = new Error('Comment ' + req.params.commentID + ' not found');
-                    err.statusCode = 404;
+                if (!req.user._id.equals(dish.comments.id(req.params.commentID).author._id)) { // when author and user are not same
+                    console.log('Not same author');
+                    var err = new Error('You are not the author!!! Only authors can delete their comments');
+                    err.status = 403;
                     return next(err);
+                } else { // when author and user are same
+                    if (dish != null && dish.comments.id(req.params.commentID) != null) {
+                        dish.comments.id(dish.comments.id(req.params.commentID)._id).remove(); // accessing the subdocument
+                        dish.save()
+                            .then((dish) => {
+                                Dishes.findById(dish._id)
+                                    .populate('comments.author')
+                                    .then((dish) => {
+                                        res.statusCode = 200;
+                                        res.setHeader('Content-Type', 'application/json');
+                                        res.json(dish);
+                                    });
+                            }, (err) => next(err));
+                    } else if (dish == null) {
+                        err = new Error('Dish ' + req.params.dishId + ' not found');
+                        err.statusCode = 404;
+                        return next(err); // see in app.js error handling function which handles this return
+                    } else {
+                        err = new Error('Comment ' + req.params.commentID + ' not found');
+                        err.statusCode = 404;
+                        return next(err);
+                    }
                 }
             }, (err) => next(err))
             .catch((err) => next(err));
