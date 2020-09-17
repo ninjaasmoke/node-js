@@ -21,6 +21,8 @@ var User = new Schema({
         type: String,
         default: ''
     },
+    facebookId: String,
+    // for fb login - oauth 2
     admin: {
         type: Boolean,
         default: false,
