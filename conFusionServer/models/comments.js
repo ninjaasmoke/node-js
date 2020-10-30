@@ -21,6 +21,10 @@ const commentSchema = new Schema({
         // for mongoose population
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
+    },
+    dish: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Dish'
     }
 },
     {
