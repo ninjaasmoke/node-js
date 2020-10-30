@@ -17,7 +17,7 @@ dishRouter.route('/')
     })
     .get(cors.cors, (req, res, next) => {
         // modification of res is carried from app.all
-        Dishes.find({})
+        Dishes.find(req.query)
             .populate('comments.author') // for mongoose population
             .then((dishes) => {
                 res.statusCode = 200;

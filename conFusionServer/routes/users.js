@@ -8,6 +8,8 @@ const cors = require('./cors');
 var router = express.Router();
 router.use(bodyParser.json());
 
+router.options('*', cors.corsWithOptions, (req, res) => { res.sendStatus(200) })
+
 /* GET users listing. */
 router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, function (req, res, next) {
   User.find({})
@@ -77,70 +79,94 @@ router.post('/signup', cors.corsWithOptions, (req, res, next) => {
 // .catch((err) => next(err));
 
 
-router.post('/login', cors.corsWithOptions, passport.authenticate('local'),
-  (req, res) => { // added passport.authenticate('local') for passport
+router.post('/login', cors.corsWithOptions, (req, res, next) => { // added passport.authenticate('local') for passport
 
-    // with passport
-    var token = authenticate.getToken({ _id: req.user._id }); // to use passport tokens and jwt
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
-    res.json({ success: true, token: token, status: 'You are successfully logged in' });
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
 
+    if (!user) { //user doesnt exist
+      res.statusCode = 401;
+      res.setHeader('Content-Type', 'application/json');
+      res.json({ success: false, status: 'Login unsuccessful', err: info });
+    }
 
-    //  add below code befprre 'with passport'
-    // if (!req.session.user) { // session.user doesnt exist
-    //   var authHeader = req.headers.authorization;
+    req.login(user, (err) => {
+      if (err) {
+        res.statusCode = 401;
+        res.setHeader('Content-Type', 'application/json');
+        res.json({ success: false, status: 'Login unsuccessful', err: 'Could not login user' });
+      }
+      var token = authenticate.getToken({ _id: req.user._id }); // to use passport tokens and jwt
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.json({ success: true, status: 'Login successful', token: token });
+    })
 
-    //   if (!authHeader) {
-    //     var err = new Error('You are not authenicated!');
+  })(req, res, next);
 
-    //     res.setHeader('WWW-Authenticate', 'Basic');
-    //     err.status = 401;
-    //     next(err);
-    //     return;
-    //   }
-
-    //   var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString()
-    //     .split(':'); // splits into an array of 2 items
-
-    //   var username = auth[0];
-    //   var password = auth[1];
-
-    //   User.findOne({ username: username })
-    //     .then((user) => {
-    //       if (user === null) {
-    //         var err = new Error('User ' + username + ' not found!');
-
-    //         res.setHeader('WWW-Authenicate', 'Basic');
-    //         err.status = 403;
-    //         next(err);
-    //       } else if (user.password !== password) {
-    //         var err = new Error('Wrong password!');
-
-    //         res.setHeader('WWW-Authenicate', 'Basic');
-    //         err.status = 403;
-    //         next(err);
-    //       } else if (user.username === username && user.password === password) {
-    //         req.session.user = 'authenticated';
-    //         res.statusCode = 200;
-    //         res.setHeader('Content-Type', 'text/plain');
-    //         res.end('You are authenticated');
-    //         next();
-    //       } else {
-    //         var err = new Error('Someting is wrong!');
-    //         err.status = 500;
-    //         next(err);
-    //       }
-    //     })
-    //     .catch((err) => next(err));
-    // } else {
-    //   res.statusCode = 200;
-    //   res.setHeader('Content-Type', 'text/plain');
-    //   res.end('You are already authenticated!!!');
-    // }
+  // with passport
+  // var token = authenticate.getToken({ _id: req.user._id }); // to use passport tokens and jwt
+  // res.statusCode = 200;
+  // res.setHeader('Content-Type', 'application/json');
+  // res.json({ success: true, token: token, status: 'You are successfully logged in' });
 
 
-  });
+  //  add below code befprre 'with passport'
+  // if (!req.session.user) { // session.user doesnt exist
+  //   var authHeader = req.headers.authorization;
+
+  //   if (!authHeader) {
+  //     var err = new Error('You are not authenicated!');
+
+  //     res.setHeader('WWW-Authenticate', 'Basic');
+  //     err.status = 401;
+  //     next(err);
+  //     return;
+  //   }
+
+  //   var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString()
+  //     .split(':'); // splits into an array of 2 items
+
+  //   var username = auth[0];
+  //   var password = auth[1];
+
+  //   User.findOne({ username: username })
+  //     .then((user) => {
+  //       if (user === null) {
+  //         var err = new Error('User ' + username + ' not found!');
+
+  //         res.setHeader('WWW-Authenicate', 'Basic');
+  //         err.status = 403;
+  //         next(err);
+  //       } else if (user.password !== password) {
+  //         var err = new Error('Wrong password!');
+
+  //         res.setHeader('WWW-Authenicate', 'Basic');
+  //         err.status = 403;
+  //         next(err);
+  //       } else if (user.username === username && user.password === password) {
+  //         req.session.user = 'authenticated';
+  //         res.statusCode = 200;
+  //         res.setHeader('Content-Type', 'text/plain');
+  //         res.end('You are authenticated');
+  //         next();
+  //       } else {
+  //         var err = new Error('Someting is wrong!');
+  //         err.status = 500;
+  //         next(err);
+  //       }
+  //     })
+  //     .catch((err) => next(err));
+  // } else {
+  //   res.statusCode = 200;
+  //   res.setHeader('Content-Type', 'text/plain');
+  //   res.end('You are already authenticated!!!');
+  // }
+
+
+});
 
 router.get('/logout', (req, res, next) => {
   if (req.session) {
@@ -163,5 +189,25 @@ router.get('/facebook/token', passport.authenticate('facebook-token'), (req, res
     res.json({ success: true, token: token, status: 'You are successfully logged in' });
   }
 });
+
+// to check auth from client side
+router.get('/checkJWTToken', cors.corsWithOptions, (req, res, next) => {
+  passport.authenticate('jwt', { session: false }, (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+
+    if (!user) {
+      res.statusCode = 401
+      res.setHeader('Content-Type', 'application/json')
+      res.json({ status: 'JWT invalid!', success: false, err: info })
+    }
+    else {
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.json({ status: 'JWT valid!', success: true, user: user })
+    }
+  })(req, res);
+})
 
 module.exports = router;
